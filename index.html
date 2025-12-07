@@ -16,7 +16,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> <!-- اضافه شده برای عکس -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
     <style>
         :root {
@@ -178,7 +178,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            overflow-y: auto; /* برای اسکرول در فرم‌های طولانی */
+            overflow-y: auto;
         }
 
         .form-card {
@@ -249,7 +249,7 @@
             max-width: 100%;
             margin-top: 10px;
             border-radius: 8px;
-            display: none; /* به صورت پیش‌فرض مخفی است */
+            display: none;
         }
 
         .submit-btn {
@@ -271,6 +271,26 @@
             color: var(--primary-color);
         }
 
+        /* دکمه خروجی جدید */
+        .export-btn {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .export-btn:hover {
+            background-color: #003366;
+        }
+
         .report-item {
             background-color: var(--white);
             border-radius: 8px;
@@ -279,6 +299,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border-right: 4px solid;
             animation: fadeIn 0.5s ease-in;
+            position: relative; /* برای قرارگیری دکمه حذف */
         }
 
         @keyframes fadeIn {
@@ -333,6 +354,29 @@
             font-style: italic;
         }
 
+        /* دکمه حذف */
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            bottom: 15px;
+            left: 15px;
+            background-color: var(--danger-color);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+
         .welcome-message {
             text-align: center;
             padding: 40px 20px;
@@ -370,6 +414,11 @@
         <!-- این بخش برای مدیران نمایش داده می‌شود -->
         <section id="admin-view" class="report-list" style="display: none;">
             <h3>پنل مدیریت گزارش‌ها</h3>
+            <!-- دکمه خروجی جدید -->
+            <button id="export-csv-btn" class="export-btn">
+                <i class="fas fa-download"></i>
+                خروجی آمار (CSV)
+            </button>
             <div id="reports-container">
                 <div class="loading-spinner">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -461,19 +510,18 @@
     <script>
         // --- مرحله ۱: اطلاعات پروژه Firebase خود را اینجا قرار دهید ---
         const firebaseConfig = {
-  apiKey: "AIzaSyB1BWb9fXBfBaELCB2sptSCMa_MJcM_QFI",
-  authDomain: "hazopai.firebaseapp.com",
-  projectId: "hazopai",
-  storageBucket: "hazopai.firebasestorage.app",
-  messagingSenderId: "482486364946",
-  appId: "1:482486364946:web:2a32a6441b3a85404521cb"
-};
-
+            apiKey: "AIzaSyYOUR_API_KEY_HERE",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "1:your-app-id:web:your-web-app-id"
+        };
 
         // مقداردهی اولیه Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const storage = firebase.storage(); // مقداردهی اولیه Storage
+        const storage = firebase.storage();
 
         document.addEventListener('DOMContentLoaded', () => {
             // عناصر DOM
@@ -491,6 +539,7 @@
             const submitBtn = reportForm.querySelector('.submit-btn');
             const imagePreview = document.getElementById('image-preview');
             const reportPhotoInput = document.getElementById('report-photo');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
 
             const adminView = document.getElementById('admin-view');
             const reporterView = document.getElementById('reporter-view');
@@ -580,19 +629,16 @@
                     personnelNumber: document.getElementById('personnel-number').value,
                     description: document.getElementById('report-description').value,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    imageUrl: null // به صورت پیش‌فرض خالی است
+                    imageUrl: null
                 };
                 
                 const imageFile = reportPhotoInput.files[0];
-
                 if (imageFile) {
-                    // اگر عکس وجود دارد، ابتدا آن را آپلود کن
                     const storageRef = storage.ref(`reports_images/${Date.now()}_${imageFile.name}`);
                     await storageRef.put(imageFile);
                     reportData.imageUrl = await storageRef.getDownloadURL();
                 }
 
-                // ذخیره گزارش در Firestore
                 db.collection("reports").add(reportData)
                     .then(() => {
                         reportFormContainer.style.display = 'none';
@@ -609,6 +655,67 @@
                         submitBtn.textContent = 'ثبت گزارش';
                     });
             });
+
+            // --- ویژگی جدید ۱: تابع حذف گزارش ---
+            window.deleteReport = function(reportId) {
+                if (confirm("آیا از حذف این گزارش مطمئن هستید؟ این عمل غیرقابل بازگشت است.")) {
+                    db.collection("reports").doc(reportId).delete()
+                        .then(() => {
+                            console.log("Report successfully deleted!");
+                            // نیازی به به‌روزرسانی دستی نیست، listener خودش این کار را می‌کند
+                        })
+                        .catch((error) => {
+                            console.error("Error removing report: ", error);
+                            alert("خطا در حذف گزارش.");
+                        });
+                }
+            };
+            
+            // --- ویژگی جدید ۲: تابع خروجی CSV ---
+            exportCsvBtn.addEventListener('click', async () => {
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال آماده‌سازی...';
+
+                try {
+                    const snapshot = await db.collection("reports").orderBy("timestamp", "desc").get();
+                    if (snapshot.empty) {
+                        alert("هیچ گزارشی برای خروجی گرفتن وجود ندارد.");
+                        return;
+                    }
+
+                    const reports = snapshot.docs.map(doc => doc.data());
+                    const headers = ['زمان', 'نوع گزارش', 'محل', 'شماره پرسنلی', 'توضیحات'];
+                    const csvContent = [
+                        headers.join(','), // هدرهای CSV
+                        ...reports.map(r => [
+                            r.timestamp ? r.timestamp.toDate().toLocaleString('fa-IR') : '',
+                            `"${r.type}"`, // قرار دادن در " برای جلوگیری از مشکل کاما در متن
+                            `"${r.location}"`,
+                            `"${r.personnelNumber || ''}"`,
+                            `"${r.description.replace(/"/g, '""')}"` // جایگزینی " در متن با ""
+                        ].join(','))
+                    ].join('\n');
+
+                    // ایجاد لینک دانلود
+                    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // \ufeff برای فونت فارسی در اکسل
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `safety-reports-${new Date().toISOString().slice(0, 10)}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                } catch (error) {
+                    console.error("Error generating CSV: ", error);
+                    alert("خطا در ایجاد فایل خروجی.");
+                } finally {
+                    exportCsvBtn.disabled = false;
+                    exportCsvBtn.innerHTML = '<i class="fas fa-download"></i> خروجی آمار (CSV)';
+                }
+            });
+
 
             // تابع نمایش گزارش‌ها
             function displayReports() {
@@ -631,6 +738,7 @@
                         }
 
                         reportItem.innerHTML = `
+                            <button class="delete-btn" onclick="deleteReport('${doc.id}')"><i class="fas fa-trash-alt"></i></button>
                             <div class="report-item-header"><span class="report-type">${typeText[report.type]}</span><span class="report-time">${reportTime}</span></div>
                             <div class="report-location"><i class="fas fa-map-marker-alt"></i> ${report.location}</div>
                             <div class="report-description">${report.description}</div>
