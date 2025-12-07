@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>گزارش‌دهی ایمنی - پتروشیمی اصفهان</title>
+    
+    <!-- فونت فارسی -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- آیکون‌ها -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> <!-- اضافه شده برای عکس -->
+
+    <style>
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #004080;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-bg: #f4f7f6;
+            --white: #ffffff;
+            --text-dark: #333;
+            --text-light: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* هدر */
+        header {
+            background-color: var(--primary-color);
+            color: var(--white);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .company-logo {
+            height: 40px;
+            width: auto;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .header-actions button {
+            background: none;
+            border: 1px solid var(--white);
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        /* محتوای اصلی */
+        main {
+            flex-grow: 1;
+            padding: 20px 15px 80px 15px;
+        }
+
+        /* مودال ورود مدیر */
+        #admin-login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-form-card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-form-card h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .login-form-card .form-group {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        .login-form-card input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+        }
+
+        /* دکمه شناور ثبت گزارش */
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success-color);
+            color: var(--white);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: 500;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s;
+            z-index: 100;
+        }
+
+        .fab:hover {
+            background-color: #218838;
+        }
+
+        /* فرم گزارش */
+        #report-form-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto; /* برای اسکرول در فرم‌های طولانی */
+        }
+
+        .form-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .form-header h2 {
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-light);
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        #image-preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 8px;
+            display: none; /* به صورت پیش‌فرض مخفی است */
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        /* لیست گزارش‌ها */
+        .report-list h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .report-item {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-right: 4px solid;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .report-item.incident { border-right-color: var(--danger-color); }
+        .report-item.near-miss { border-right-color: var(--warning-color); }
+        .report-item.unsafe-condition { border-right-color: var(--secondary-color); }
+
+        .report-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .report-type {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .report-time {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .report-location {
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .report-description {
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+        
+        .report-image {
+            margin-top: 15px;
+            max-width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .reporter-id {
+            font-size: 0.8rem;
+            color: var(--primary-color);
+            margin-top: 10px;
+            font-style: italic;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        
+        .welcome-message i {
+            font-size: 3rem;
+            color: var(--success-color);
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            color: var(--danger-color);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <img src="https://upload.wikimedia.org/wikipedia/fa/thumb/a/a4/Isfahan_Petrochemical_Company_Logo.svg/320px-Isfahan_Petrochemical_Company_Logo.svg.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
+            <h1>گزارش‌دهی ایمنی فوری</h1>
+        </div>
+        <div class="header-actions">
+            <button id="admin-login-btn" style="display: block;"><i class="fas fa-user-shield"></i> ورود مدیر</button>
+            <button id="admin-logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- این بخش برای مدیران نمایش داده می‌شود -->
+        <section id="admin-view" class="report-list" style="display: none;">
+            <h3>پنل مدیریت گزارش‌ها</h3>
+            <div id="reports-container">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>در حال بارگذاری گزارش‌ها...</p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- این بخش برای کاربران عادی نمایش داده می‌شود -->
+        <section id="reporter-view" class="welcome-message">
+            <i class="fas fa-shield-alt"></i>
+            <h2>به سامانه ایمنی خوش آمدید</h2>
+            <p>با تشکر از همکاری شما. برای ثبت گزارش، روی دکمه زیر کلیک کنید.</p>
+        </section>
+    </main>
+
+    <!-- دکمه شناور برای ثبت گزارش جدید -->
+    <button id="new-report-btn" class="fab">
+        <i class="fas fa-plus-circle"></i>
+        ثبت گزارش جدید
+    </button>
+
+    <!-- مودال ورود مدیر -->
+    <div id="admin-login-modal">
+        <div class="login-form-card">
+            <h2>ورود به پنل مدیریت</h2>
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <input type="password" id="admin-code" placeholder="کد مدیریت را وارد کنید" required>
+                </div>
+                <button type="submit" class="submit-btn">ورود</button>
+                <p id="login-error" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- فرم ثبت گزارش (مودال) -->
+    <div id="report-form-container">
+        <div class="form-card">
+            <div class="form-header">
+                <h2>گزارش جدید</h2>
+                <button id="close-form-btn" class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="report-form">
+                <div class="form-group">
+                    <label for="report-type">نوع گزارش</label>
+                    <select id="report-type" required>
+                        <option value="">انتخاب کنید...</option>
+                        <option value="incident">حادثه</option>
+                        <option value="near-miss">شبه‌حادثه</option>
+                        <option value="unsafe-condition">شرایط خطرناک</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="location-category">نوع محل وقوع</label>
+                    <select id="location-category" required>
+                        <option value="">انتخاب کنید...</option>
+                        <option value="صنعتی">صنعتی</option>
+                        <option value="غیر صنعتی">غیر صنعتی</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="location-detail">محل دقیق وقوع</label>
+                    <input type="text" id="location-detail" placeholder="مثال: سالن کنترل واحد اتیلن، طبقه دوم" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="personnel-number">شماره پرسنلی (اختیاری)</label>
+                    <input type="text" id="personnel-number" placeholder="جهت پیگیری‌های آتی">
+                </div>
+                
+                <div class="form-group">
+                    <label for="report-description">توضیحات</label>
+                    <textarea id="report-description" placeholder="جزئیات وقوع را بنویسید..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="report-photo">ارسال عکس (اختیاری)</label>
+                    <input type="file" id="report-photo" accept="image/*">
+                    <img id="image-preview" src="#" alt="پیش‌نمایش عکس">
+                </div>
+
+                <button type="submit" class="submit-btn">در حال ثبت گزارش...</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- مرحله ۱: اطلاعات پروژه Firebase خود را اینجا قرار دهید ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyB1BWb9fXBfBaELCB2sptSCMa_MJcM_QFI",
+  authDomain: "hazopai.firebaseapp.com",
+  projectId: "hazopai",
+  storageBucket: "hazopai.firebasestorage.app",
+  messagingSenderId: "482486364946",
+  appId: "1:482486364946:web:2a32a6441b3a85404521cb"
+};
+
+
+        // مقداردهی اولیه Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage(); // مقداردهی اولیه Storage
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // عناصر DOM
+            const adminLoginBtn = document.getElementById('admin-login-btn');
+            const adminLogoutBtn = document.getElementById('admin-logout-btn');
+            const adminLoginModal = document.getElementById('admin-login-modal');
+            const adminLoginForm = document.getElementById('admin-login-form');
+            const loginError = document.getElementById('login-error');
+            
+            const newReportBtn = document.getElementById('new-report-btn');
+            const reportFormContainer = document.getElementById('report-form-container');
+            const closeFormBtn = document.getElementById('close-form-btn');
+            const reportForm = document.getElementById('report-form');
+            const reportsContainer = document.getElementById('reports-container');
+            const submitBtn = reportForm.querySelector('.submit-btn');
+            const imagePreview = document.getElementById('image-preview');
+            const reportPhotoInput = document.getElementById('report-photo');
+
+            const adminView = document.getElementById('admin-view');
+            const reporterView = document.getElementById('reporter-view');
+
+            const ADMIN_CODE = '1014015';
+
+            // تابع به‌روزرسانی رابط کاربری بر اساس وضعیت مدیر
+            function updateUI() {
+                const isAdmin = localStorage.getItem('isAdmin') === 'true';
+                if (isAdmin) {
+                    adminView.style.display = 'block';
+                    reporterView.style.display = 'none';
+                    adminLoginBtn.style.display = 'none';
+                    adminLogoutBtn.style.display = 'block';
+                    displayReports();
+                } else {
+                    adminView.style.display = 'none';
+                    reporterView.style.display = 'block';
+                    adminLoginBtn.style.display = 'block';
+                    adminLogoutBtn.style.display = 'none';
+                    reportsContainer.innerHTML = '';
+                }
+            }
+
+            // مدیریت ورود مدیر
+            adminLoginBtn.addEventListener('click', () => adminLoginModal.style.display = 'flex');
+            adminLoginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const code = document.getElementById('admin-code').value;
+                if (code === ADMIN_CODE) {
+                    localStorage.setItem('isAdmin', 'true');
+                    adminLoginModal.style.display = 'none';
+                    adminLoginForm.reset();
+                    loginError.textContent = '';
+                    updateUI();
+                } else {
+                    loginError.textContent = 'کد وارد شده اشتباه است.';
+                }
+            });
+            adminLogoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('isAdmin');
+                updateUI();
+            });
+            adminLoginModal.addEventListener('click', (e) => {
+                if (e.target === adminLoginModal) adminLoginModal.style.display = 'none';
+            });
+
+            // منطق فرم گزارش
+            newReportBtn.addEventListener('click', () => reportFormContainer.style.display = 'flex');
+            closeFormBtn.addEventListener('click', () => {
+                reportFormContainer.style.display = 'none';
+                reportForm.reset();
+                imagePreview.style.display = 'none';
+            });
+            reportFormContainer.addEventListener('click', (e) => {
+                if (e.target === reportFormContainer) reportFormContainer.style.display = 'none';
+            });
+
+            // پیش‌نمایش عکس
+            reportPhotoInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreview.style.display = 'none';
+                }
+            });
+
+            // ارسال فرم
+            reportForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'در حال ارسال...';
+
+                const locationCategory = document.getElementById('location-category').value;
+                const locationDetail = document.getElementById('location-detail').value;
+                const fullLocation = `${locationCategory} - ${locationDetail}`;
+
+                const reportData = {
+                    type: document.getElementById('report-type').value,
+                    location: fullLocation,
+                    personnelNumber: document.getElementById('personnel-number').value,
+                    description: document.getElementById('report-description').value,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    imageUrl: null // به صورت پیش‌فرض خالی است
+                };
+                
+                const imageFile = reportPhotoInput.files[0];
+
+                if (imageFile) {
+                    // اگر عکس وجود دارد، ابتدا آن را آپلود کن
+                    const storageRef = storage.ref(`reports_images/${Date.now()}_${imageFile.name}`);
+                    await storageRef.put(imageFile);
+                    reportData.imageUrl = await storageRef.getDownloadURL();
+                }
+
+                // ذخیره گزارش در Firestore
+                db.collection("reports").add(reportData)
+                    .then(() => {
+                        reportFormContainer.style.display = 'none';
+                        reportForm.reset();
+                        imagePreview.style.display = 'none';
+                        alert('گزارش شما با موفقیت ثبت شد.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ثبت گزارش';
+                    })
+                    .catch((error) => {
+                        console.error("Error adding report: ", error);
+                        alert("خطا در ثبت گزارش. لطفاً دوباره تلاش کنید.");
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ثبت گزارش';
+                    });
+            });
+
+            // تابع نمایش گزارش‌ها
+            function displayReports() {
+                db.collection("reports").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                    reportsContainer.innerHTML = '';
+                    if (snapshot.empty) {
+                        reportsContainer.innerHTML = `<p>هیچ گزارشی ثبت نشده است.</p>`;
+                        return;
+                    }
+                    snapshot.forEach((doc) => {
+                        const report = doc.data();
+                        const reportItem = document.createElement('div');
+                        reportItem.className = `report-item ${report.type}`;
+                        const typeText = { 'incident': 'حادثه', 'near-miss': 'شبه‌حادثه', 'unsafe-condition': 'شرایط خطرناک' };
+                        const reportTime = report.timestamp ? report.timestamp.toDate().toLocaleString('fa-IR') : 'در حال ثبت...';
+                        
+                        let imageHtml = '';
+                        if (report.imageUrl) {
+                            imageHtml = `<img src="${report.imageUrl}" alt="تصویر گزارش" class="report-image">`;
+                        }
+
+                        reportItem.innerHTML = `
+                            <div class="report-item-header"><span class="report-type">${typeText[report.type]}</span><span class="report-time">${reportTime}</span></div>
+                            <div class="report-location"><i class="fas fa-map-marker-alt"></i> ${report.location}</div>
+                            <div class="report-description">${report.description}</div>
+                            ${report.personnelNumber ? `<div class="reporter-id"><i class="fas fa-id-badge"></i> پرسنلی: ${report.personnelNumber}</div>` : ''}
+                            ${imageHtml}
+                        `;
+                        reportsContainer.appendChild(reportItem);
+                    });
+                }, (error) => {
+                    console.error("Error fetching reports: ", error);
+                    reportsContainer.innerHTML = `<p style="color: red;">خطا در اتصال به سرور.</p>`;
+                });
+            }
+
+            // بارگذاری اولیه وضعیت
+            updateUI();
+        });
+    </script>
+</body>
+</html>
