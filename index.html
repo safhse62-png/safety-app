@@ -271,7 +271,6 @@
             color: var(--primary-color);
         }
 
-        /* دکمه خروجی جدید */
         .export-btn {
             background-color: var(--secondary-color);
             color: var(--white);
@@ -299,7 +298,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border-right: 4px solid;
             animation: fadeIn 0.5s ease-in;
-            position: relative; /* برای قرارگیری دکمه حذف */
+            position: relative;
         }
 
         @keyframes fadeIn {
@@ -354,11 +353,9 @@
             font-style: italic;
         }
 
-        /* دکمه حذف */
         .delete-btn {
             position: absolute;
             top: 15px;
-            bottom: 15px;
             left: 15px;
             background-color: var(--danger-color);
             color: var(--white);
@@ -376,19 +373,52 @@
             background-color: #c82333;
         }
 
-
+        /* طراحی صفحه خوشامدگویی (Splash Screen) */
         .welcome-message {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             padding: 40px 20px;
+            color: var(--primary-color);
+            height: 100%;
+            background: linear-gradient(135deg, var(--light-bg), #e8eef5);
+        }
+        
+        .welcome-message .main-logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 25px;
+            animation: fadeInLogo 1.5s ease-out;
+        }
+
+        @keyframes fadeInLogo {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .welcome-message h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .welcome-message p {
+            font-size: 1rem;
             color: var(--text-light);
+            max-width: 300px;
+            line-height: 1.6;
         }
         
-        .welcome-message i {
-            font-size: 3rem;
-            color: var(--success-color);
-            margin-bottom: 15px;
+        .welcome-message .tagline {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-top: 5px;
         }
-        
+
         .error-message {
             color: var(--danger-color);
             margin-top: 10px;
@@ -401,7 +431,8 @@
 
     <header>
         <div class="header-content">
-            <img src="https://upload.wikimedia.org/wikipedia/fa/thumb/a/a4/Isfahan_Petrochemical_Company_Logo.svg/320px-Isfahan_Petrochemical_Company_Logo.svg.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
+            <!-- نکته: مطمئن شوید فایل logo.png در مخزن شما آپلود شده است -->
+            <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
             <h1>گزارش‌دهی ایمنی فوری</h1>
         </div>
         <div class="header-actions">
@@ -411,10 +442,9 @@
     </header>
 
     <main>
-        <!-- این بخش برای مدیران نمایش داده می‌شود -->
+        <!-- پنل مدیریت -->
         <section id="admin-view" class="report-list" style="display: none;">
             <h3>پنل مدیریت گزارش‌ها</h3>
-            <!-- دکمه خروجی جدید -->
             <button id="export-csv-btn" class="export-btn">
                 <i class="fas fa-download"></i>
                 خروجی آمار (CSV)
@@ -427,11 +457,13 @@
             </div>
         </section>
         
-        <!-- این بخش برای کاربران عادی نمایش داده می‌شود -->
+        <!-- صفحه کاربر عادی -->
         <section id="reporter-view" class="welcome-message">
-            <i class="fas fa-shield-alt"></i>
-            <h2>به سامانه ایمنی خوش آمدید</h2>
-            <p>با تشکر از همکاری شما. برای ثبت گزارش، روی دکمه زیر کلیک کنید.</p>
+            <!-- نکته: مطمئن شوید فایل logo.png در مخزن شما آپلود شده است -->
+            <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="main-logo">
+            <h2>پتروشیمی اصفهان</h2>
+            <p class="tagline">ایمنی، مسئولیت ماست</p>
+            <p>با تشکر از همکاری شما در حفظ محیطی امن. برای ثبت هرگونه حادثه، شبه‌حادثه یا شرایط خطرناک، روی دکمه زیر کلیک کنید.</p>
         </section>
     </main>
 
@@ -545,6 +577,9 @@
             const reporterView = document.getElementById('reporter-view');
 
             const ADMIN_CODE = '1014015';
+            
+            // متغیر برای مدیریت شنونده داده‌ها
+            let reportsUnsubscribe = null;
 
             // تابع به‌روزرسانی رابط کاربری بر اساس وضعیت مدیر
             function updateUI() {
@@ -554,17 +589,23 @@
                     reporterView.style.display = 'none';
                     adminLoginBtn.style.display = 'none';
                     adminLogoutBtn.style.display = 'block';
-                    displayReports();
+                    displayReports(); // فعال کردن شنونده برای مدیر
                 } else {
                     adminView.style.display = 'none';
-                    reporterView.style.display = 'block';
+                    reporterView.style.display = 'flex';
                     adminLoginBtn.style.display = 'block';
                     adminLogoutBtn.style.display = 'none';
+                    
+                    // مهم: متوقف کردن شنونده هنگام خروج
+                    if (reportsUnsubscribe) {
+                        reportsUnsubscribe();
+                        reportsUnsubscribe = null;
+                    }
                     reportsContainer.innerHTML = '';
                 }
             }
 
-            // مدیریت ورود مدیر
+            // مدیریت ورود و خروج مدیر
             adminLoginBtn.addEventListener('click', () => adminLoginModal.style.display = 'flex');
             adminLoginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -597,8 +638,6 @@
             reportFormContainer.addEventListener('click', (e) => {
                 if (e.target === reportFormContainer) reportFormContainer.style.display = 'none';
             });
-
-            // پیش‌نمایش عکس
             reportPhotoInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -618,11 +657,9 @@
                 e.preventDefault();
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'در حال ارسال...';
-
                 const locationCategory = document.getElementById('location-category').value;
                 const locationDetail = document.getElementById('location-detail').value;
                 const fullLocation = `${locationCategory} - ${locationDetail}`;
-
                 const reportData = {
                     type: document.getElementById('report-type').value,
                     location: fullLocation,
@@ -631,14 +668,12 @@
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     imageUrl: null
                 };
-                
                 const imageFile = reportPhotoInput.files[0];
                 if (imageFile) {
                     const storageRef = storage.ref(`reports_images/${Date.now()}_${imageFile.name}`);
                     await storageRef.put(imageFile);
                     reportData.imageUrl = await storageRef.getDownloadURL();
                 }
-
                 db.collection("reports").add(reportData)
                     .then(() => {
                         reportFormContainer.style.display = 'none';
@@ -656,14 +691,11 @@
                     });
             });
 
-            // --- ویژگی جدید ۱: تابع حذف گزارش ---
+            // تابع حذف گزارش
             window.deleteReport = function(reportId) {
                 if (confirm("آیا از حذف این گزارش مطمئن هستید؟ این عمل غیرقابل بازگشت است.")) {
                     db.collection("reports").doc(reportId).delete()
-                        .then(() => {
-                            console.log("Report successfully deleted!");
-                            // نیازی به به‌روزرسانی دستی نیست، listener خودش این کار را می‌کند
-                        })
+                        .then(() => console.log("Report successfully deleted!"))
                         .catch((error) => {
                             console.error("Error removing report: ", error);
                             alert("خطا در حذف گزارش.");
@@ -671,33 +703,29 @@
                 }
             };
             
-            // --- ویژگی جدید ۲: تابع خروجی CSV ---
+            // تابع خروجی CSV
             exportCsvBtn.addEventListener('click', async () => {
                 exportCsvBtn.disabled = true;
                 exportCsvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال آماده‌سازی...';
-
                 try {
                     const snapshot = await db.collection("reports").orderBy("timestamp", "desc").get();
                     if (snapshot.empty) {
                         alert("هیچ گزارشی برای خروجی گرفتن وجود ندارد.");
                         return;
                     }
-
                     const reports = snapshot.docs.map(doc => doc.data());
                     const headers = ['زمان', 'نوع گزارش', 'محل', 'شماره پرسنلی', 'توضیحات'];
                     const csvContent = [
-                        headers.join(','), // هدرهای CSV
+                        headers.join(','),
                         ...reports.map(r => [
                             r.timestamp ? r.timestamp.toDate().toLocaleString('fa-IR') : '',
-                            `"${r.type}"`, // قرار دادن در " برای جلوگیری از مشکل کاما در متن
+                            `"${r.type}"`,
                             `"${r.location}"`,
                             `"${r.personnelNumber || ''}"`,
-                            `"${r.description.replace(/"/g, '""')}"` // جایگزینی " در متن با ""
+                            `"${r.description.replace(/"/g, '""')}"`
                         ].join(','))
                     ].join('\n');
-
-                    // ایجاد لینک دانلود
-                    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // \ufeff برای فونت فارسی در اکسل
+                    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement('a');
                     const url = URL.createObjectURL(blob);
                     link.setAttribute('href', url);
@@ -706,7 +734,6 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-
                 } catch (error) {
                     console.error("Error generating CSV: ", error);
                     alert("خطا در ایجاد فایل خروجی.");
@@ -716,10 +743,13 @@
                 }
             });
 
-
-            // تابع نمایش گزارش‌ها
+            // تابع نمایش گزارش‌ها با مدیریت شنونده
             function displayReports() {
-                db.collection("reports").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                if (reportsUnsubscribe) {
+                    reportsUnsubscribe();
+                }
+                reportsContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>در حال بارگذاری گزارش‌ها...</p></div>';
+                reportsUnsubscribe = db.collection("reports").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
                     reportsContainer.innerHTML = '';
                     if (snapshot.empty) {
                         reportsContainer.innerHTML = `<p>هیچ گزارشی ثبت نشده است.</p>`;
@@ -731,12 +761,10 @@
                         reportItem.className = `report-item ${report.type}`;
                         const typeText = { 'incident': 'حادثه', 'near-miss': 'شبه‌حادثه', 'unsafe-condition': 'شرایط خطرناک' };
                         const reportTime = report.timestamp ? report.timestamp.toDate().toLocaleString('fa-IR') : 'در حال ثبت...';
-                        
                         let imageHtml = '';
                         if (report.imageUrl) {
                             imageHtml = `<img src="${report.imageUrl}" alt="تصویر گزارش" class="report-image">`;
                         }
-
                         reportItem.innerHTML = `
                             <button class="delete-btn" onclick="deleteReport('${doc.id}')"><i class="fas fa-trash-alt"></i></button>
                             <div class="report-item-header"><span class="report-type">${typeText[report.type]}</span><span class="report-time">${reportTime}</span></div>
