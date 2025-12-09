@@ -19,11 +19,12 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
     <style>
+        /* --- رنگ‌بندی جدید و بهبودیافته --- */
         :root {
-            --primary-color: #003366;
-            --secondary-color: #004080;
+            --primary-color: #f0ad4e; /* زرد حرفه‌ای برای هدر */
+            --secondary-color: #0056b3; /* آبی تیره برای دکمه‌ها و بخش‌های دیگر */
             --success-color: #28a745;
-            --warning-color: #ffc107;
+            --warning-color: #ffc107; /* زرد روشن‌تر برای هشدارها */
             --danger-color: #dc3545;
             --light-bg: #f4f7f6;
             --white: #ffffff;
@@ -48,7 +49,7 @@
 
         /* --- کادر نمایش خطا --- */
         #error-display {
-            display: none; /* به صورت پیش‌فرض مخفی است */
+            display: none;
             position: fixed;
             top: 80px;
             left: 50%;
@@ -70,8 +71,8 @@
 
         /* هدر */
         header {
-            background-color: var(--primary-color);
-            color: var(--white);
+            background-color: var(--primary-color); /* رنگ جدید زرد */
+            color: var(--text-dark); /* متن تیره برای خوانایی روی پس‌زمینه زرد */
             padding: 15px;
             text-align: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
@@ -97,18 +98,23 @@
 
         header h1 {
             font-size: 1.2rem;
-            font-weight: 500;
+            font-weight: 700; /* فونت ضخیم‌تر برای جلوه بهتر */
         }
         
         .header-actions button {
             background: none;
-            border: 1px solid var(--white);
-            color: var(--white);
+            border: 2px solid var(--text-dark); /* کادر تیره */
+            color: var(--text-dark);
             padding: 8px 12px;
             border-radius: 5px;
             cursor: pointer;
             font-family: 'Vazirmatn', sans-serif;
             font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .header-actions button:hover {
+            background-color: var(--text-dark);
+            color: var(--primary-color);
         }
 
         /* محتوای اصلی */
@@ -144,7 +150,7 @@
 
         .login-form-card h2 {
             margin-bottom: 20px;
-            color: var(--primary-color);
+            color: var(--secondary-color); /* عنوان با رنگ ثانویه */
         }
         
         .login-form-card .form-group {
@@ -230,6 +236,7 @@
         .form-header h2 {
             font-size: 1.3rem;
             font-weight: 500;
+            color: var(--secondary-color); /* عنوان با رنگ ثانویه */
         }
 
         .close-btn {
@@ -277,7 +284,7 @@
         .submit-btn {
             width: 100%;
             padding: 15px;
-            background-color: var(--primary-color);
+            background-color: var(--secondary-color); /* دکمه اصلی با رنگ ثانویه */
             color: var(--white);
             border: none;
             border-radius: 8px;
@@ -286,11 +293,14 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
+        .submit-btn:hover {
+            background-color: #004085; /* کمی تیره‌تر در حالت هاور */
+        }
 
         /* لیست گزارش‌ها */
         .report-list h3 {
             margin-bottom: 15px;
-            color: var(--primary-color);
+            color: var(--secondary-color); /* عنوان با رنگ ثانویه */
         }
 
         .export-btn {
@@ -309,7 +319,7 @@
             gap: 8px;
         }
         .export-btn:hover {
-            background-color: #003366;
+            background-color: #004085;
         }
 
         .report-item {
@@ -370,7 +380,7 @@
 
         .reporter-id {
             font-size: 0.8rem;
-            color: var(--primary-color);
+            color: var(--secondary-color); /* جزئیات با رنگ ثانویه */
             margin-top: 10px;
             font-style: italic;
         }
@@ -403,7 +413,7 @@
             align-items: center;
             text-align: center;
             padding: 40px 20px;
-            color: var(--primary-color);
+            color: var(--secondary-color); /* متن اصلی با رنگ ثانویه */
             height: 100%;
             background: linear-gradient(135deg, var(--light-bg), #e8eef5);
         }
@@ -424,7 +434,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             margin-bottom: 10px;
-            color: var(--primary-color);
+            color: var(--primary-color); /* عنوان با رنگ اصلی (زرد) */
         }
 
         .welcome-message p {
@@ -437,7 +447,7 @@
         .welcome-message .tagline {
             font-size: 0.9rem;
             font-weight: 500;
-            color: var(--secondary-color);
+            color: var(--primary-color); /* شعار با رنگ اصلی (زرد) */
             margin-top: 5px;
         }
 
@@ -571,7 +581,7 @@
             // مخفی کردن خطا بعد از 10 ثانیه
             setTimeout(() => {
                 errorDiv.style.display = 'none';
-            }, 10000);
+            },10000);
         }
 
         // --- اطلاعات فایربیس شما ---
