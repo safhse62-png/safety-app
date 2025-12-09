@@ -16,7 +16,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script> <!-- اضافه شده برای عکس -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
 
     <style>
         :root {
@@ -44,6 +44,28 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* --- کادر نمایش خطا --- */
+        #error-display {
+            display: none; /* به صورت پیش‌فرض مخفی است */
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--danger-color);
+            color: var(--white);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 500;
+            max-width: 90%;
+            text-align: center;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        #error-display i {
+            margin-left: 10px;
         }
 
         /* هدر */
@@ -178,7 +200,7 @@
             justify-content: center;
             align-items: center;
             padding: 20px;
-            overflow-y: auto; /* برای اسکرول در فرم‌های طولانی */
+            overflow-y: auto;
         }
 
         .form-card {
@@ -249,7 +271,7 @@
             max-width: 100%;
             margin-top: 10px;
             border-radius: 8px;
-            display: none; /* به صورت پیش‌فرض مخفی است */
+            display: none;
         }
 
         .submit-btn {
@@ -271,6 +293,25 @@
             color: var(--primary-color);
         }
 
+        .export-btn {
+            background-color: var(--secondary-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .export-btn:hover {
+            background-color: #003366;
+        }
+
         .report-item {
             background-color: var(--white);
             border-radius: 8px;
@@ -279,6 +320,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             border-right: 4px solid;
             animation: fadeIn 0.5s ease-in;
+            position: relative;
         }
 
         @keyframes fadeIn {
@@ -333,18 +375,72 @@
             font-style: italic;
         }
 
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: var(--danger-color);
+            color: var(--white);
+            border: none;
+            border-radius: 5px;
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* طراحی صفحه خوشامدگویی (Splash Screen) */
         .welcome-message {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
             padding: 40px 20px;
+            color: var(--primary-color);
+            height: 100%;
+            background: linear-gradient(135deg, var(--light-bg), #e8eef5);
+        }
+        
+        .welcome-message .main-logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 25px;
+            animation: fadeInLogo 1.5s ease-out;
+        }
+
+        @keyframes fadeInLogo {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .welcome-message h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .welcome-message p {
+            font-size: 1rem;
             color: var(--text-light);
+            max-width: 300px;
+            line-height: 1.6;
         }
         
-        .welcome-message i {
-            font-size: 3rem;
-            color: var(--success-color);
-            margin-bottom: 15px;
+        .welcome-message .tagline {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-top: 5px;
         }
-        
+
         .error-message {
             color: var(--danger-color);
             margin-top: 10px;
@@ -355,9 +451,12 @@
 </head>
 <body>
 
+    <!-- کادر نمایش خطا -->
+    <div id="error-display"></div>
+
     <header>
         <div class="header-content">
-            <img src="https://upload.wikimedia.org/wikipedia/fa/thumb/a/a4/Isfahan_Petrochemical_Company_Logo.svg/320px-Isfahan_Petrochemical_Company_Logo.svg.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
+            <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
             <h1>گزارش‌دهی ایمنی فوری</h1>
         </div>
         <div class="header-actions">
@@ -367,9 +466,13 @@
     </header>
 
     <main>
-        <!-- این بخش برای مدیران نمایش داده می‌شود -->
+        <!-- پنل مدیریت -->
         <section id="admin-view" class="report-list" style="display: none;">
             <h3>پنل مدیریت گزارش‌ها</h3>
+            <button id="export-csv-btn" class="export-btn">
+                <i class="fas fa-download"></i>
+                خروجی آمار (CSV)
+            </button>
             <div id="reports-container">
                 <div class="loading-spinner">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -378,11 +481,12 @@
             </div>
         </section>
         
-        <!-- این بخش برای کاربران عادی نمایش داده می‌شود -->
+        <!-- صفحه کاربر عادی -->
         <section id="reporter-view" class="welcome-message">
-            <i class="fas fa-shield-alt"></i>
-            <h2>به سامانه ایمنی خوش آمدید</h2>
-            <p>با تشکر از همکاری شما. برای ثبت گزارش، روی دکمه زیر کلیک کنید.</p>
+            <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="main-logo">
+            <h2>پتروشیمی اصفهان</h2>
+            <p class="tagline">ایمنی، مسئولیت ماست</p>
+            <p>با تشکر از همکاری شما در حفظ محیطی امن. برای ثبت هرگونه حادثه، شبه‌حادثه یا شرایط خطرناک، روی دکمه زیر کلیک کنید.</p>
         </section>
     </main>
 
@@ -453,27 +557,43 @@
                     <img id="image-preview" src="#" alt="پیش‌نمایش عکس">
                 </div>
 
-                <button type="submit" class="submit-btn">در حال ثبت گزارش...</button>
+                <button type="submit" class="submit-btn">ثبت گزارش</button>
             </form>
         </div>
     </div>
 
     <script>
-        // --- مرحله ۱: اطلاعات پروژه Firebase خود را اینجا قرار دهید ---
+        // --- تابع نمایش خطا ---
+        function showError(message) {
+            const errorDiv = document.getElementById('error-display');
+            errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            errorDiv.style.display = 'block';
+            // مخفی کردن خطا بعد از 10 ثانیه
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 10000);
+        }
+
+        // --- اطلاعات فایربیس شما ---
         const firebaseConfig = {
             apiKey: "AIzaSyB0tKrVCDyt45QiI_ZIShkTB99V3IUdk4k",
             authDomain: "ipc-safety-reportin.firebaseapp.com",
             projectId: "ipc-safety-reportin",
-            storageBucket: "ipc-safety-reportin.appspot.com", // فرمت استاندارد برای اطمینان از کارکرد صحیح
+            storageBucket: "ipc-safety-reportin.appspot.com",
             messagingSenderId: "1079826416378",
             appId: "1:1079826416378:web:a32a92befab6c2e3833f43",
             measurementId: "G-76WVXY7XQT"
         };
 
-        // مقداردهی اولیه Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage(); // مقداردهی اولیه Storage
+        // مقداردهی اولیه Firebase با کنترل خطا
+        let db, storage;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            storage = firebase.storage();
+        } catch (e) {
+            showError(`خطا در مقداردهی اولیه فایربیس: ${e.message}`);
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             // عناصر DOM
@@ -491,13 +611,15 @@
             const submitBtn = reportForm.querySelector('.submit-btn');
             const imagePreview = document.getElementById('image-preview');
             const reportPhotoInput = document.getElementById('report-photo');
+            const exportCsvBtn = document.getElementById('export-csv-btn');
 
             const adminView = document.getElementById('admin-view');
             const reporterView = document.getElementById('reporter-view');
 
             const ADMIN_CODE = '1014015';
+            
+            let reportsUnsubscribe = null;
 
-            // تابع به‌روزرسانی رابط کاربری بر اساس وضعیت مدیر
             function updateUI() {
                 const isAdmin = localStorage.getItem('isAdmin') === 'true';
                 if (isAdmin) {
@@ -508,14 +630,17 @@
                     displayReports();
                 } else {
                     adminView.style.display = 'none';
-                    reporterView.style.display = 'block';
+                    reporterView.style.display = 'flex';
                     adminLoginBtn.style.display = 'block';
                     adminLogoutBtn.style.display = 'none';
+                    if (reportsUnsubscribe) {
+                        reportsUnsubscribe();
+                        reportsUnsubscribe = null;
+                    }
                     reportsContainer.innerHTML = '';
                 }
             }
 
-            // مدیریت ورود مدیر
             adminLoginBtn.addEventListener('click', () => adminLoginModal.style.display = 'flex');
             adminLoginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -538,7 +663,6 @@
                 if (e.target === adminLoginModal) adminLoginModal.style.display = 'none';
             });
 
-            // منطق فرم گزارش
             newReportBtn.addEventListener('click', () => reportFormContainer.style.display = 'flex');
             closeFormBtn.addEventListener('click', () => {
                 reportFormContainer.style.display = 'none';
@@ -548,8 +672,6 @@
             reportFormContainer.addEventListener('click', (e) => {
                 if (e.target === reportFormContainer) reportFormContainer.style.display = 'none';
             });
-
-            // پیش‌نمایش عکس
             reportPhotoInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -564,55 +686,114 @@
                 }
             });
 
-            // ارسال فرم
+            // ارسال فرم با کنترل خطا
             reportForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                if (!db || !storage) {
+                    showError("سرویس فایربیس در دسترس نیست. لطفاً اتصال اینترنت خود را بررسی کنید.");
+                    return;
+                }
+                
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'در حال ارسال...';
-
                 const locationCategory = document.getElementById('location-category').value;
                 const locationDetail = document.getElementById('location-detail').value;
                 const fullLocation = `${locationCategory} - ${locationDetail}`;
-
                 const reportData = {
                     type: document.getElementById('report-type').value,
                     location: fullLocation,
                     personnelNumber: document.getElementById('personnel-number').value,
                     description: document.getElementById('report-description').value,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    imageUrl: null // به صورت پیش‌فرض خالی است
+                    imageUrl: null
                 };
-                
                 const imageFile = reportPhotoInput.files[0];
-
-                if (imageFile) {
-                    // اگر عکس وجود دارد، ابتدا آن را آپلود کن
-                    const storageRef = storage.ref(`reports_images/${Date.now()}_${imageFile.name}`);
-                    await storageRef.put(imageFile);
-                    reportData.imageUrl = await storageRef.getDownloadURL();
+                
+                try {
+                    if (imageFile) {
+                        const storageRef = storage.ref(`reports_images/${Date.now()}_${imageFile.name}`);
+                        await storageRef.put(imageFile);
+                        reportData.imageUrl = await storageRef.getDownloadURL();
+                    }
+                    await db.collection("reports").add(reportData);
+                    reportFormContainer.style.display = 'none';
+                    reportForm.reset();
+                    imagePreview.style.display = 'none';
+                    alert('گزارش شما با موفقیت ثبت شد.');
+                } catch (error) {
+                    console.error("Error adding report: ", error);
+                    showError(`خطا در ثبت گزارش: ${error.message}`);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ثبت گزارش';
                 }
-
-                // ذخیره گزارش در Firestore
-                db.collection("reports").add(reportData)
-                    .then(() => {
-                        reportFormContainer.style.display = 'none';
-                        reportForm.reset();
-                        imagePreview.style.display = 'none';
-                        alert('گزارش شما با موفقیت ثبت شد.');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'ثبت گزارش';
-                    })
-                    .catch((error) => {
-                        console.error("Error adding report: ", error);
-                        alert("خطا در ثبت گزارش. لطفاً دوباره تلاش کنید.");
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = 'ثبت گزارش';
-                    });
             });
 
-            // تابع نمایش گزارش‌ها
+            window.deleteReport = function(reportId) {
+                if (confirm("آیا از حذف این گزارش مطمئن هستید؟ این عمل غیرقابل بازگشت است.")) {
+                    db.collection("reports").doc(reportId).delete()
+                        .then(() => console.log("Report successfully deleted!"))
+                        .catch((error) => {
+                            console.error("Error removing report: ", error);
+                            showError(`خطا در حذف گزارش: ${error.message}`);
+                        });
+                }
+            };
+            
+            exportCsvBtn.addEventListener('click', async () => {
+                if (!db) {
+                    showError("سرویس فایربیس در دسترس نیست.");
+                    return;
+                }
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال آماده‌سازی...';
+                try {
+                    const snapshot = await db.collection("reports").orderBy("timestamp", "desc").get();
+                    if (snapshot.empty) {
+                        alert("هیچ گزارشی برای خروجی گرفتن وجود ندارد.");
+                        return;
+                    }
+                    const reports = snapshot.docs.map(doc => doc.data());
+                    const headers = ['زمان', 'نوع گزارش', 'محل', 'شماره پرسنلی', 'توضیحات'];
+                    const csvContent = [
+                        headers.join(','),
+                        ...reports.map(r => [
+                            r.timestamp ? r.timestamp.toDate().toLocaleString('fa-IR') : '',
+                            `"${r.type}"`,
+                            `"${r.location}"`,
+                            `"${r.personnelNumber || ''}"`,
+                            `"${r.description.replace(/"/g, '""')}"`
+                        ].join(','))
+                    ].join('\n');
+                    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `safety-reports-${new Date().toISOString().slice(0, 10)}.csv`);
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (error) {
+                    console.error("Error generating CSV: ", error);
+                    showError(`خطا در ایجاد فایل خروجی: ${error.message}`);
+                } finally {
+                    exportCsvBtn.disabled = false;
+                    exportCsvBtn.innerHTML = '<i class="fas fa-download"></i> خروجی آمار (CSV)';
+                }
+            });
+
             function displayReports() {
-                db.collection("reports").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+                if (!db) {
+                    showError("سرویس فایربیس در دسترس نیست.");
+                    reportsContainer.innerHTML = `<p style="color: red;">خطا در اتصال به سرور.</p>`;
+                    return;
+                }
+                if (reportsUnsubscribe) {
+                    reportsUnsubscribe();
+                }
+                reportsContainer.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i><p>در حال بارگذاری گزارش‌ها...</p></div>';
+                reportsUnsubscribe = db.collection("reports").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
                     reportsContainer.innerHTML = '';
                     if (snapshot.empty) {
                         reportsContainer.innerHTML = `<p>هیچ گزارشی ثبت نشده است.</p>`;
@@ -624,13 +805,12 @@
                         reportItem.className = `report-item ${report.type}`;
                         const typeText = { 'incident': 'حادثه', 'near-miss': 'شبه‌حادثه', 'unsafe-condition': 'شرایط خطرناک' };
                         const reportTime = report.timestamp ? report.timestamp.toDate().toLocaleString('fa-IR') : 'در حال ثبت...';
-                        
                         let imageHtml = '';
                         if (report.imageUrl) {
                             imageHtml = `<img src="${report.imageUrl}" alt="تصویر گزارش" class="report-image">`;
                         }
-
                         reportItem.innerHTML = `
+                            <button class="delete-btn" onclick="deleteReport('${doc.id}')"><i class="fas fa-trash-alt"></i></button>
                             <div class="report-item-header"><span class="report-type">${typeText[report.type]}</span><span class="report-time">${reportTime}</span></div>
                             <div class="report-location"><i class="fas fa-map-marker-alt"></i> ${report.location}</div>
                             <div class="report-description">${report.description}</div>
@@ -641,11 +821,11 @@
                     });
                 }, (error) => {
                     console.error("Error fetching reports: ", error);
+                    showError(`خطا در خواندن گزارش‌ها: ${error.message}`);
                     reportsContainer.innerHTML = `<p style="color: red;">خطا در اتصال به سرور.</p>`;
                 });
             }
 
-            // بارگذاری اولیه وضعیت
             updateUI();
         });
     </script>
