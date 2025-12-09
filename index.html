@@ -13,7 +13,7 @@
     <!-- آیکون‌ها -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (نسخه سازگار برای استفاده ساده) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
@@ -431,7 +431,6 @@
 
     <header>
         <div class="header-content">
-            <!-- نکته: مطمئن شوید فایل logo.png در مخزن شما آپلود شده است -->
             <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="company-logo">
             <h1>گزارش‌دهی ایمنی فوری</h1>
         </div>
@@ -459,7 +458,6 @@
         
         <!-- صفحه کاربر عادی -->
         <section id="reporter-view" class="welcome-message">
-            <!-- نکته: مطمئن شوید فایل logo.png در مخزن شما آپلود شده است -->
             <img src="logo.png" alt="لوگوی پتروشیمی اصفهان" class="main-logo">
             <h2>پتروشیمی اصفهان</h2>
             <p class="tagline">ایمنی، مسئولیت ماست</p>
@@ -540,17 +538,16 @@
     </div>
 
     <script>
-        // --- مرحله ۱: اطلاعات پروژه Firebase خود را اینجا قرار دهید ---
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBuJKDoE1ZBc1x13uC6dY1u6wzTWaBI8W8",
-  authDomain: "epc-safety-management.firebaseapp.com",
-  projectId: "epc-safety-management",
-  storageBucket: "epc-safety-management.firebasestorage.app",
-  messagingSenderId: "849497637970",
-  appId: "1:849497637970:web:63b0ec82f462a17ccf0b8b",
-  measurementId: "G-SFE1J8NMX0"
-};
+        // --- اطلاعات جدید فایربیس شما در اینجا قرار داده شده است ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB0tKrVCDyt45QiI_ZIShkTB99V3IUdk4k",
+            authDomain: "ipc-safety-reportin.firebaseapp.com",
+            projectId: "ipc-safety-reportin",
+            storageBucket: "ipc-safety-reportin.appspot.com", // فرمت استاندارد برای اطمینان از کارکرد صحیح
+            messagingSenderId: "1079826416378",
+            appId: "1:1079826416378:web:a32a92befab6c2e3833f43",
+            measurementId: "G-76WVXY7XQT"
+        };
 
         // مقداردهی اولیه Firebase
         firebase.initializeApp(firebaseConfig);
@@ -591,14 +588,13 @@ const firebaseConfig = {
                     reporterView.style.display = 'none';
                     adminLoginBtn.style.display = 'none';
                     adminLogoutBtn.style.display = 'block';
-                    displayReports(); // فعال کردن شنونده برای مدیر
+                    displayReports();
                 } else {
                     adminView.style.display = 'none';
                     reporterView.style.display = 'flex';
                     adminLoginBtn.style.display = 'block';
                     adminLogoutBtn.style.display = 'none';
                     
-                    // مهم: متوقف کردن شنونده هنگام خروج
                     if (reportsUnsubscribe) {
                         reportsUnsubscribe();
                         reportsUnsubscribe = null;
@@ -789,4 +785,3 @@ const firebaseConfig = {
     </script>
 </body>
 </html>
-
